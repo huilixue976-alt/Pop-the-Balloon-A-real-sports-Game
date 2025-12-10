@@ -1,0 +1,13 @@
+This is a real sports game that can help you exercise and keep fit!
+Download these files to a folder;
+Double-click "index.html";
+Allow camera permissions;
+Click the Start Game and Fullscreen buttons;
+Start making movements while looking at the screen—your goal is to make your image pop the balloons as soon as possible!
+********************************************************************
+这是一个真正的运动游戏，可以帮助你运动健身！
+1. 下载这些文件到一个文件夹；
+2. 双击“index.html”;
+3. 允许摄像头权限；
+4. 点击开始游戏、全屏按钮；
+5. 你开始看着屏幕做动作，目标是使得你的影像尽快击破气球！

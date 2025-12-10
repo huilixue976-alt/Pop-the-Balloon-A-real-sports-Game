@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>运动辅助游戏 - 触碰气球</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1><i class="fas fa-gamepad"></i> 运动辅助游戏</h1>
+            <p class="subtitle">通过运动触碰屏幕上的气球，锻炼身体协调性</p>
+        </header>
+
+        <div class="game-area">
+            <div class="game-controls">
+                <div class="score-board">
+                    <div class="score-item">
+                        <i class="fas fa-trophy"></i>
+                        <span>得分: <span id="score">0</span></span>
+                    </div>
+                    <div class="score-item">
+                        <i class="fas fa-clock"></i>
+                        <span>时间: <span id="time">60</span>秒</span>
+                    </div>
+                    <div class="score-item">
+                        <i class="fas fa-bullseye"></i>
+                        <span>命中: <span id="hits">0</span></span>
+                    </div>
+                    <div class="score-item">
+                        <i class="fas fa-chart-line"></i>
+                        <span>准确率: <span id="accuracy">0%</span></span>
+                    </div>
+                </div>
+
+                <div class="control-buttons">
+                    <button id="start-btn" class="btn btn-primary">
+                        <i class="fas fa-play"></i> 开始游戏
+                    </button>
+                    <button id="pause-btn" class="btn btn-secondary" disabled>
+                        <i class="fas fa-pause"></i> 暂停
+                    </button>
+                    <button id="reset-btn" class="btn btn-warning">
+                        <i class="fas fa-redo"></i> 重置
+                    </button>
+                    <button id="fullscreen-btn" class="btn btn-info">
+                        <i class="fas fa-expand"></i> 全屏
+                    </button>
+                    <button id="help-btn" class="btn btn-info">
+                        <i class="fas fa-question-circle"></i> 帮助
+                    </button>
+                </div>
+
+                <div class="settings">
+                    <h3><i class="fas fa-cog"></i> 游戏设置</h3>
+                    <div class="setting-item">
+                        <label for="game-time">游戏时长 (秒):</label>
+                        <input type="range" id="game-time" min="30" max="120" value="60">
+                        <span id="time-value">60</span>
+                    </div>
+                    <div class="setting-item">
+                        <label for="balloon-speed">气球速度:</label>
+                        <input type="range" id="balloon-speed" min="1" max="5" value="3">
+                        <span id="speed-value">中等</span>
+                    </div>
+                    <div class="setting-item">
+                        <label for="balloon-count">气球数量:</label>
+                        <input type="range" id="balloon-count" min="3" max="15" value="8">
+                        <span id="count-value">8</span>
+                    </div>
+                    <div class="setting-item">
+                        <label for="camera-mode">摄像头模式:</label>
+                        <select id="camera-mode">
+                            <option value="user">前置摄像头</option>
+                            <option value="environment">后置摄像头</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="game-canvas-container">
+                <div class="camera-container">
+                    <video id="camera-video" autoplay playsinline></video>
+                    <canvas id="game-canvas"></canvas>
+                    <div class="camera-overlay">
+                        <div class="overlay-text">请允许摄像头访问以开始游戏</div>
+                        <div class="overlay-hint">移动身体触碰气球使其爆破！</div>
+                    </div>
+                    <!-- 游戏结束覆盖层，浮于视频上面 -->
+                    <div id="game-over-overlay" class="game-over-overlay" style="display: none;">
+                        <div class="game-over-content">
+                            <h2><i class="fas fa-flag-checkered"></i> 游戏结束!</h2>
+                            <div class="final-stats">
+                                <div class="final-stat">
+                                    <i class="fas fa-trophy"></i>
+                                    <h3>最终得分</h3>
+                                    <p id="final-score-overlay">0</p>
+                                </div>
+                                <div class="final-stat">
+                                    <i class="fas fa-bullseye"></i>
+                                    <h3>命中次数</h3>
+                                    <p id="final-hits-overlay">0</p>
+                                </div>
+                                <div class="final-stat">
+                                    <i class="fas fa-chart-line"></i>
+                                    <h3>准确率</h3>
+                                    <p id="final-accuracy-overlay">0%</p>
+                                </div>
+                            </div>
+                            <div class="modal-buttons">
+                                <button id="play-again-btn-overlay" class="btn btn-primary">
+                                    <i class="fas fa-redo"></i> 再玩一次
+                                </button>
+                                <button id="close-game-over-btn-overlay" class="btn btn-secondary">
+                                    <i class="fas fa-times"></i> 关闭
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="game-instructions">
+                    <h3><i class="fas fa-info-circle"></i> 游戏说明</h3>
+                    <ul>
+                        <li><i class="fas fa-check-circle"></i> 点击"开始游戏"按钮启动游戏</li>
+                        <li><i class="fas fa-check-circle"></i> 允许浏览器访问您的摄像头</li>
+                        <li><i class="fas fa-check-circle"></i> 在摄像头前移动身体触碰气球</li>
+                        <li><i class="fas fa-check-circle"></i> 每个爆破的气球得10分</li>
+                        <li><i class="fas fa-check-circle"></i> 连续命中可获得额外奖励分数</li>
+                        <li><i class="fas fa-check-circle"></i> 游戏时间结束后显示最终得分</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="game-stats">
+            <div class="stat-card">
+                <h4><i class="fas fa-history"></i> 游戏记录</h4>
+                <div id="game-history">暂无记录</div>
+            </div>
+            <div class="stat-card">
+                <h4><i class="fas fa-medal"></i> 成就</h4>
+                <div class="achievements">
+                    <div class="achievement" id="first-hit">首次命中 <i class="fas fa-star"></i></div>
+                    <div class="achievement" id="combo-5">5连击 <i class="fas fa-star"></i></div>
+                    <div class="achievement" id="perfect-game">完美游戏 <i class="fas fa-star"></i></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 分享功能 -->
+        <div class="share-section">
+            <h3><i class="fas fa-share-alt"></i> 分享游戏</h3>
+            <div class="share-buttons">
+                <button class="share-btn btn btn-primary">
+                    <i class="fas fa-share-alt"></i> 分享游戏
+                </button>
+            </div>
+            <p class="share-note">与朋友分享这个有趣的运动游戏，一起锻炼身体协调性！</p>
+        </div>
+
+        <footer class="footer">
+            <p>运动辅助游戏 &copy; 2025 | 设计用于促进身体活动和协调性训练</p>
+            <p class="footer-note">注意：此游戏需要摄像头支持，所有处理均在本地进行，不会上传任何视频数据。</p>
+            <p class="footer-note">分享功能：点击分享按钮与朋友一起玩！</p>
+        </footer>
+    </div>
+
+    <!-- 帮助模态框 -->
+    <div id="help-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2><i class="fas fa-question-circle"></i> 游戏帮助</h2>
+            <div class="modal-body">
+                <h3>游戏目标</h3>
+                <p>通过身体运动触碰屏幕上随机出现的气球，尽可能多地爆破气球以获得高分。</p>
+                
+                <h3>游戏规则</h3>
+                <ul>
+                    <li>游戏开始后，气球会随机出现在屏幕上</li>
+                    <li>在摄像头前移动身体，使身体部位触碰到气球</li>
+                    <li>每个爆破的气球得10分</li>
+                    <li>连续命中可获得额外奖励（每连续命中一个气球额外加5分）</li>
+                    <li>游戏时间结束后，显示最终得分和统计信息</li>
+                </ul>
+                
+                <h3>控制说明</h3>
+                <ul>
+                    <li><strong>开始游戏</strong>: 启动游戏并请求摄像头访问权限</li>
+                    <li><strong>暂停</strong>: 暂停游戏计时和气球生成</li>
+                    <li><strong>重置</strong>: 重置游戏到初始状态</li>
+                    <li><strong>游戏设置</strong>: 调整游戏时长、气球速度和数量</li>
+                </ul>
+                
+                <h3>技术需求</h3>
+                <p>需要支持WebRTC的现代浏览器和可用的摄像头设备。</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 游戏结束模态框 -->
+    <div id="game-over-modal" class="modal">
+        <div class="modal-content game-over-content">
+            <h2><i class="fas fa-flag-checkered"></i> 游戏结束!</h2>
+            <div class="final-stats">
+                <div class="final-stat">
+                    <i class="fas fa-trophy"></i>
+                    <h3>最终得分</h3>
+                    <p id="final-score">0</p>
+                </div>
+                <div class="final-stat">
+                    <i class="fas fa-bullseye"></i>
+                    <h3>命中次数</h3>
+                    <p id="final-hits">0</p>
+                </div>
+                <div class="final-stat">
+                    <i class="fas fa-chart-line"></i>
+                    <h3>准确率</h3>
+                    <p id="final-accuracy">0%</p>
+                </div>
+            </div>
+            <div class="modal-buttons">
+                <button id="play-again-btn" class="btn btn-primary">
+                    <i class="fas fa-redo"></i> 再玩一次
+                </button>
+                <button id="close-game-over-btn" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> 关闭
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 分享模态框 -->
+    <div id="share-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" id="close-share-modal">&times;</span>
+            <h2><i class="fas fa-share-alt"></i> 分享游戏</h2>
+            <div class="modal-body">
+                <p>与朋友分享这个有趣的运动游戏，一起锻炼身体协调性！</p>
+                
+                <div class="share-url-container">
+                    <input type="text" id="share-url" class="share-url-input" readonly>
+                    <button id="copy-url-btn" class="share-url-btn">
+                        <i class="fas fa-copy"></i> 复制链接
+                    </button>
+                </div>
+                
+                <div id="share-success" class="share-success">
+                    <i class="fas fa-check-circle"></i> 链接已复制到剪贴板！
+                </div>
+                
+                <div class="share-qrcode-container" style="text-align: center; margin: 20px 0;">
+                    <h4>扫描二维码分享</h4>
+                    <div id="share-qrcode" style="display: inline-block; margin: 15px auto;"></div>
+                </div>
+                
+                <div class="share-actions">
+                    <h4>分享到社交媒体</h4>
+                    <div class="share-buttons">
+                        <a href="#" id="share-whatsapp" class="share-btn share-whatsapp" target="_blank">
+                            <i class="fab fa-whatsapp"></i> WhatsApp
+                        </a>
+                        <a href="#" id="share-facebook" class="share-btn share-facebook" target="_blank">
+                            <i class="fab fa-facebook-f"></i> Facebook
+                        </a>
+                        <a href="#" id="share-twitter" class="share-btn share-twitter" target="_blank">
+                            <i class="fab fa-twitter"></i> Twitter
+                        </a>
+                        <a href="#" id="share-weibo" class="share-btn share-weibo" target="_blank">
+                            <i class="fab fa-weibo"></i> 微博
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
